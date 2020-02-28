@@ -58,18 +58,18 @@ def debounce(wait):
 
 @debounce(1)
 def ampy_operation(src_path, operation):
-    sessionName = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
+    session_name = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
     ampy_cmd = f'{root_ampy_cmd} {operation} {src_path}'
     # Kill any running sessions
-    os.system(f'screen -S {sessionName} -X quit')
+    os.system(f'screen -S {session_name} -X quit')
     print(ampy_cmd)
     if os.system(ampy_cmd) != 0:
         return
-    print(sessionName, args.port, args.baud)
-    os.system(f'screen -dmS {sessionName} {args.port} {args.baud}')
+    print(session_name, args.port, args.baud)
+    os.system(f'screen -dmS {session_name} {args.port} {args.baud}')
     # restart micropython machine
-    os.system(f'screen -S {sessionName} -X stuff "^Cimport machine^Mmachine.reset()^M"')
-    os.system(f'screen -r {sessionName}')
+    os.system(f'screen -S {session_name} -X stuff "^Cimport machine^Mmachine.reset()^M"')
+    os.system(f'screen -r {session_name}')
 
 
 class EventHandler(LoggingEventHandler):
@@ -86,15 +86,16 @@ class EventHandler(LoggingEventHandler):
                     print('file operation {event_type} not supported')
 
 
-if __name__ == "__main__":
+def main():
     path = os.getcwd()
+    print('monitoring project dire: ', path)
     event_handler = EventHandler()
     observer = Observer()
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
-    sessionName = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
+    session_name = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
     print('connecting to serial')
-    process = subprocess.run(['screen', '-S', sessionName, args.port, args.baud], stdout=subprocess.PIPE,
+    process = subprocess.run(['screen', '-S', session_name, args.port, args.baud], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
     print(process.stdout, process.stderr)
     try:
