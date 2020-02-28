@@ -33,7 +33,6 @@ file_op = {
 }
 
 
-
 @debounce(1)
 def ampy_operation(src_path, operation):
     session_name = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
@@ -51,7 +50,8 @@ def ampy_operation(src_path, operation):
 
 
 class EventHandler(LoggingEventHandler):
-    def on_any_event(self, event):
+    @staticmethod
+    def on_any_event(event):
         if event.is_directory:
             return
         else:
@@ -74,7 +74,7 @@ def main():
     observer.start()
     session_name = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
     print('starting serial connect to: ', args.port)
-    time.sleep(2)
+    time.sleep(5)
     process = subprocess.run(['screen', '-S', session_name, args.port, args.baud], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
     print(process.stdout, process.stderr)
