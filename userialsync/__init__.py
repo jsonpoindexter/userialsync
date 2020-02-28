@@ -53,9 +53,10 @@ def ampy_operation(src_path, operation):
 class EventHandler(LoggingEventHandler):
     def on_any_event(self, event):
         if event.is_directory:
-            print('is dir')
+            return
         else:
-            if event.src_path.find('boot.py') >= 0 or event.src_path.find('main.py') >= 0:
+            if event.src_path == f'{os.getcwd()}/boot.py' or \
+                    event.src_path == f'{os.getcwd()}/main.py':
                 operation = file_op.get(event.event_type, None)
                 if operation is not None:
                     print(event.event_type, event.src_path)
@@ -66,13 +67,14 @@ class EventHandler(LoggingEventHandler):
 
 def main():
     path = os.getcwd()
-    print('monitoring project dire: ', path)
+    print('monitoring project dir: ', path)
     event_handler = EventHandler()
     observer = Observer()
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
     session_name = args.port.split('/')[2]  # ttyS8 / ttyS9 exc.
-    print('connecting to serial')
+    print('starting serial connect to: ', args.port)
+    time.sleep(2)
     process = subprocess.run(['screen', '-S', session_name, args.port, args.baud], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, universal_newlines=True)
     print(process.stdout, process.stderr)
