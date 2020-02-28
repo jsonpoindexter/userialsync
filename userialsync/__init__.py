@@ -3,6 +3,8 @@ import subprocess
 import argparse
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
+from userialsync.debounce import debounce
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--port', help='Serial port', type=str, required=True)
@@ -24,36 +26,12 @@ if args.baud is not None:
 # modified - put
 # deleted - rm 
 
-from threading import Timer
-import time
-
 file_op = {
     'created': 'put',
     'modified': 'put',
     'deleted': 'rm',
 }
 
-
-def debounce(wait):
-    """ Decorator that will postpone a functions
-        execution until after wait seconds
-        have elapsed since the last time it was invoked. """
-
-    def decorator(fn):
-        def debounced(*args, **kwargs):
-            def call_it():
-                fn(*args, **kwargs)
-
-            try:
-                debounced.t.cancel()
-            except(AttributeError):
-                pass
-            debounced.t = Timer(wait, call_it)
-            debounced.t.start()
-
-        return debounced
-
-    return decorator
 
 
 @debounce(1)
