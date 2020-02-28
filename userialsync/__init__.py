@@ -46,7 +46,7 @@ def ampy_operation(src_path, operation):
     print(session_name, args.port, args.baud)
     os.system(f'screen -dmS {session_name} {args.port} {args.baud}')
     # restart micropython machine
-    os.system(f'screen -S {session_name} -X stuff "^Cimport machine^Mmachine.reset()^M"')
+    os.system(f'screen -S {session_name} -X stuff "^C^D"')
     os.system(f'screen -r {session_name}')
 
 
