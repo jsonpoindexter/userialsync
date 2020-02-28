@@ -5,8 +5,8 @@ from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--port', help='Serial port')
-parser.add_argument('--baud', help='Serial baud')
+parser.add_argument('--port', help='Serial port', type=str, required=True)
+parser.add_argument('--baud', help='Serial baud', type=str, required=True)
 args = parser.parse_args()
 print(args.port)
 
