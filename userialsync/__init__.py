@@ -23,20 +23,23 @@ class USerialSync:
         self.root_ampy_cmd = f'ampy --port {self.port}'
         if args.baud is not None:
             self.root_ampy_cmd += f' --baud {self.baud}'
-        args.dir_map.append(['main.py', None])
-        args.dir_map.append(['boot.py', None])
-        self.paths_map = self.directory_map_to_paths_map(args.dir_map)
+        # args.dir_map.append(['main.py', None])
+        # args.dir_map.append(['boot.py', None])
+        # self.paths_map = self.directory_map_to_paths_map(args.dir_map)
+        self.paths_map = args.dir_map
+        self.paths_map.append(['main.py', None])
+        self.paths_map.append(['boot.py', None])
         print(self.paths_map)
 
         self.file_ops = {
-            'created': 'put',
-            'modified': 'put',
-            'deleted': 'rm',
+            'created': 'put',  # src/dest
+            'modified': 'put',  # src/dest
+            'deleted': 'rm',  # dest
         }
         self.dir_ops = {
-            'created': 'mkdir',
-            'modified': 'put',
-            'deleted': 'rmdir'
+            'created': 'mkdir',  # dest
+            'modified': 'put',  # src/dest
+            'deleted': 'rmdir'  # src/dest
         }
 
     # Iterate over each file/folder name and make it a full path
@@ -53,23 +56,34 @@ class USerialSync:
     def is_dir_map(self, src_path):
         # return any((src_path.find(path_map[0]) != -1 for path_map in self.paths_map)
         for path_map in self.paths_map:
-            if src_path.find(path_map[0]) != -1:
-                return path_map
+            full_path_map = f'{self.root_path}/{path_map[0]}'
+            if src_path.find(full_path_map) != -1:
+                if src_path == full_path_map:
+                    return path_map
+                else:
+                    return [src_path.replace(f'{self.root_path}/', ''),
+                            f'{path_map[1]}{src_path.replace(full_path_map, "")}']
 
     @debounce(1)
-    def ampy_operation(self, src_path, operation):
-        session_name = self.port.split('/')[2]  # ttyS8 / ttyS9 exc.
-        ampy_cmd = f'{self.root_ampy_cmd} {operation} {src_path}'
+    def ampy_operation(self, dir_map, operation):
+        src_path = ''
+        dest_path = ''
+        if operation == 'mkdir' or operation == 'rm':
+            src_path = dir_map[0] if dir_map[1] is None else dir_map[1]
+        else:
+            src_path = dir_map[0]
+            dest_path = dir_map[1]
+        ampy_cmd = f'{self.root_ampy_cmd} {operation} {src_path} {dest_path if dest_path is not None else ""}'
         # Kill any running sessions
         # os.system(f'screen -S {session_name} -X quit')
         print(ampy_cmd)
         # if os.system(ampy_cmd) != 0:
         #     return
-        print(session_name, self.port, self.baud)
-        # os.system(f'screen -dmS {session_name} {self.port} {self.baud}')
+        print(self.session_name, self.port, self.baud)
+        # os.system(f'screen -dmS {self.session_name} {self.port} {self.baud}')
         # restart micropython machine
-        # os.system(f'screen -S {session_name} -X stuff "^C^D"')
-        # os.system(f'screen -r {session_name}')
+        # os.system(f'screen -S {self.session_name} -X stuff "^C^D"')
+        # os.system(f'screen -r {self.session_name}')
 
 
 def main():
@@ -90,17 +104,16 @@ def main():
         @staticmethod
         def on_any_event(event):
             dir_map = u_serial_sync.is_dir_map(event.src_path)
-            if dir_map:
-                print(event.event_type, event.src_path, dir_map)
-                if event.is_directory:
-                    return
+            # print(dir_map, (event.is_directory and event.event_type != 'modified'))
+            if dir_map and (event.is_directory and event.event_type != 'modified' or event.is_directory is not True):
+                print(event.event_type, event.src_path, dir_map, event.is_directory)
+                print('')
+                # Determine ampy operation to perform
+                operation = u_serial_sync.file_ops.get(event.event_type, None)
+                if operation is not None:
+                    u_serial_sync.ampy_operation(dir_map, operation)
                 else:
-                    # Determine ampy operation to perform
-                    operation = u_serial_sync.file_ops.get(event.event_type, None)
-                    if operation is not None:
-                        u_serial_sync.ampy_operation(dir_map, operation)
-                    else:
-                        print(f'file operation {event.event_type} not supported')
+                    print(f'file operation {event.event_type} not supported')
 
     event_handler = EventHandler()
     observer = Observer()
