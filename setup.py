@@ -19,6 +19,10 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        'Operating System :: Microsoft :: Windows :: Windows NT/2000',
     ],
+    entry_points={'console_scripts': [
+        'userialsync = userialsync:main [userialsync]',
+    ]},
     python_requires='>=3.6',
 )
