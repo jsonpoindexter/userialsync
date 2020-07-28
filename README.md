@@ -10,7 +10,7 @@ Sync micropython files on change over serial
 ## Run
 While currently in your project directory:
 ```
-python3 ~/uSerialSync/main.py --port /dev/ttyS* --baud 115200
+sudo pip3 install . --upgrade; userialsync --port /dev/ttys8 --baud 115200 --dir_map '[["public", "www"]]' 
 ```
 uSerialSync will:
 1. Create a `screen` session with the session name `ttyS*` 

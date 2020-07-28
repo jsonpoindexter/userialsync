@@ -1,0 +1,1 @@
+# sudo pip3 install . --upgrade; userialsync --port /dev/ttys8 --baud 115200 --dir_map '[["public", "www"]]'
